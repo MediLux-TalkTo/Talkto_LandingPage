@@ -1,3 +1,5 @@
+import talkToLogo from "../assets/logo/talkto-logo.svg";
+
 import {
   useMemo,
   useState,
@@ -262,13 +264,12 @@ function ReservationPage() {
         <div className="mx-auto max-w-[1320px]">
           {/* Intro */}
           <section>
-            <h1 className="flex flex-wrap items-center gap-x-3 text-[38px] font-extrabold leading-[1.25] tracking-[-0.05em] text-[#35433E] sm:text-[48px] lg:text-[58px]">
-              <span className="inline-flex items-center text-[#20C986]">
-                <span className="mr-3 inline-flex h-[56px] w-[56px] items-center justify-center rounded-bl-[22px] rounded-br-lg rounded-tl-lg rounded-tr-lg bg-[#20C986]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-white" />
-                </span>
-                TalkTo
-              </span>
+            <h1 className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[38px] font-extrabold leading-[1.25] tracking-[-0.05em] text-[#35433E] sm:text-[48px] lg:text-[58px]">
+              <img
+                src={talkToLogo}
+                alt="TalkTo"
+                className="h-[42px] w-auto sm:h-[52px] lg:h-[58px]"
+              />
 
               <span>를 가장 먼저 체험해보세요</span>
             </h1>
@@ -699,10 +700,10 @@ function ReservationPage() {
       </main>
 
       <footer className="border-t border-[#E5E8E3] bg-white/60">
-        <div className="mx-auto flex max-w-[1440px] flex-col gap-5 px-6 py-7 text-[#777D75] sm:flex-row sm:items-center sm:justify-between lg:px-12 xl:px-20">
-          <span className="font-extrabold">TalkTo</span>
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-5 px-6 py-7 sm:flex-row sm:items-center sm:justify-between lg:px-12 xl:px-20">
+          <img src={talkToLogo} alt="TalkTo" className="h-7 w-auto" />
 
-          <p className="text-[13px]">
+          <p className="text-[13px] text-[#777D75] sm:text-right">
             © 2026 TalkTo 베타 화면과 혜택은 운영 과정에서 일부 조정될 수
             있습니다.
           </p>
