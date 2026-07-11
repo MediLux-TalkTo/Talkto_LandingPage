@@ -61,6 +61,7 @@ function SurveyChoice({ label, selected, onClick }: SurveyChoiceProps) {
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={selected}
       className={`flex min-h-[48px] w-full items-center gap-3 rounded-[8px] border px-5 py-3 text-left text-[15px] font-medium transition-all ${
         selected
           ? "border-[#20C986] bg-[#F1FCF7] text-[#098F57]"
@@ -68,6 +69,7 @@ function SurveyChoice({ label, selected, onClick }: SurveyChoiceProps) {
       }`}
     >
       <span
+        aria-hidden="true"
         className={`h-5 w-5 shrink-0 rounded-full border-[3px] ${
           selected
             ? "border-[#20C986] bg-[#20C986] shadow-[inset_0_0_0_3px_white]"
@@ -117,14 +119,19 @@ function ReservationPage() {
   const [contact, setContact] = useState("");
   const [reason, setReason] = useState("");
   const [agreed, setAgreed] = useState(false);
-  const [hasVoiceFile, setHasVoiceFile] = useState<"yes" | "collecting" | "">(
-    ""
-  );
+  const [firstSituation, setFirstSituation] = useState("");
 
-  const [expectations, setExpectations] = useState<string[]>([]);
-  const [voicePersonaFeeling, setVoicePersonaFeeling] = useState("");
-  const [concerns, setConcerns] = useState<string[]>([]);
-  const [useCase, setUseCase] = useState("");
+  const [voiceRecordingAmount, setVoiceRecordingAmount] = useState("");
+
+  const [pastDifficulty, setPastDifficulty] = useState("");
+
+  const [missingFeeling, setMissingFeeling] = useState("");
+
+  const [wantedFeatures, setWantedFeatures] = useState<string[]>([]);
+
+  const [voicePersonaOpinion, setVoicePersonaOpinion] = useState("");
+
+  const [mainConcerns, setMainConcerns] = useState<string[]>([]);
   const [interviewTimes, setInterviewTimes] = useState<InterviewTime[]>([]);
   const [preferredContactMethod, setPreferredContactMethod] = useState<
     ContactMethod | ""
@@ -155,11 +162,13 @@ function ReservationPage() {
     setParticipationType(type);
 
     if (type !== "survey") {
-      setHasVoiceFile("");
-      setExpectations([]);
-      setVoicePersonaFeeling("");
-      setConcerns([]);
-      setUseCase("");
+      setFirstSituation("");
+      setVoiceRecordingAmount("");
+      setPastDifficulty("");
+      setMissingFeeling("");
+      setWantedFeatures([]);
+      setVoicePersonaOpinion("");
+      setMainConcerns([]);
     }
 
     if (type !== "interview") {
@@ -175,17 +184,23 @@ function ReservationPage() {
     }
 
     return (
-      hasVoiceFile !== "" &&
-      expectations.length > 0 &&
-      voicePersonaFeeling !== "" &&
-      concerns.length > 0
+      firstSituation !== "" &&
+      voiceRecordingAmount !== "" &&
+      pastDifficulty !== "" &&
+      missingFeeling !== "" &&
+      wantedFeatures.length > 0 &&
+      voicePersonaOpinion !== "" &&
+      mainConcerns.length > 0
     );
   }, [
     participationType,
-    hasVoiceFile,
-    expectations,
-    voicePersonaFeeling,
-    concerns,
+    firstSituation,
+    voiceRecordingAmount,
+    pastDifficulty,
+    missingFeeling,
+    wantedFeatures,
+    voicePersonaOpinion,
+    mainConcerns,
   ]);
 
   const isInterviewValid = useMemo(() => {
@@ -233,11 +248,13 @@ function ReservationPage() {
       survey:
         participationType === "survey"
           ? {
-              hasVoiceFile,
-              expectations,
-              voicePersonaFeeling,
-              concerns,
-              useCase,
+              firstSituation,
+              voiceRecordingAmount,
+              pastDifficulty,
+              missingFeeling,
+              wantedFeatures,
+              voicePersonaOpinion,
+              mainConcerns,
             }
           : null,
 
@@ -355,57 +372,66 @@ function ReservationPage() {
                 </h2>
 
                 <p className="mt-3 text-[15px] font-medium text-[#777E78]">
-                  답변을 마치면 사전 등록도 함께 완료됩니다.
+                  모든 필수 문항에 답하면 사전 등록을 완료할 수 있습니다.
                 </p>
 
                 <div className="mx-auto mt-10 max-w-[900px] rounded-[20px] border border-[#CFE9DA] bg-[#EAFBF2] px-5 py-8 sm:px-10">
                   {/* Question 1 */}
                   <div className="rounded-[16px] bg-white px-6 py-6 sm:px-10">
-                    <h3 className="text-[18px] font-bold tracking-[-0.03em] text-[#2F3531]">
-                      1. 가족 통화 녹음이나 음성 파일을 가지고 있나요?
-                    </h3>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-[18px] font-bold leading-[1.5] tracking-[-0.03em] text-[#2F3531]">
+                        1. TalkTo를 보고 가장 먼저 떠오른 상황은 무엇인가요?
+                      </h3>
+
+                      <span className="text-[12px] font-medium text-[#E76E63]">
+                        단일 선택 · 필수
+                      </span>
+                    </div>
 
                     <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <SurveyChoice
-                        label="네, 가지고 있어요"
-                        selected={hasVoiceFile === "yes"}
-                        onClick={() => setHasVoiceFile("yes")}
-                      />
-
-                      <SurveyChoice
-                        label="지금부터 모으고 싶어요"
-                        selected={hasVoiceFile === "collecting"}
-                        onClick={() => setHasVoiceFile("collecting")}
-                      />
+                      {[
+                        "살아계신 부모님/조부모님의 목소리와 이야기를 남기고 싶다",
+                        "돌아가신 가족의 목소리나 대화를 다시 찾고 싶다",
+                        "돌아가신 가족의 기록이 거의 없어 아쉽다",
+                        "내 목소리와 이야기를 가족에게 남기고 싶다",
+                        "서비스가 궁금하다",
+                      ].map((item) => (
+                        <SurveyChoice
+                          key={item}
+                          label={item}
+                          selected={firstSituation === item}
+                          onClick={() => setFirstSituation(item)}
+                        />
+                      ))}
                     </div>
                   </div>
 
                   {/* Question 2 */}
                   <div className="mt-5 rounded-[16px] bg-white px-6 py-6 sm:px-10">
                     <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="text-[18px] font-bold tracking-[-0.03em] text-[#2F3531]">
-                        2. 가장 기대되는 것은 무엇인가요?
+                      <h3 className="text-[18px] font-bold leading-[1.5] tracking-[-0.03em] text-[#2F3531]">
+                        2. 가족의 통화 녹음이나 음성 파일이 있나요?
                       </h3>
 
-                      <span className="text-[12px] font-medium text-[#737A74]">
-                        복수 선택 가능
+                      <span className="text-[12px] font-medium text-[#E76E63]">
+                        단일 선택 · 필수
                       </span>
                     </div>
 
                     <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
                       {[
-                        "통화 녹음을 안전하게 보관",
-                        "그리운 말을 검색해 다시 듣기",
-                        "AI가 요약한 통화 내용 핵심 정보",
-                        "그리운 분의 목소리로 AI 대화",
+                        "10개 이상 있다",
+                        "3~9개 있다",
+                        "1~2개 있다",
+                        "있을 것 같지만 아직 찾아보지 않았다",
+                        "사진/영상/문자는 있지만 음성은 없다",
+                        "전혀 없다",
                       ].map((item) => (
                         <SurveyChoice
                           key={item}
                           label={item}
-                          selected={expectations.includes(item)}
-                          onClick={() =>
-                            toggleMultipleChoice(item, setExpectations)
-                          }
+                          selected={voiceRecordingAmount === item}
+                          onClick={() => setVoiceRecordingAmount(item)}
                         />
                       ))}
                     </div>
@@ -413,23 +439,31 @@ function ReservationPage() {
 
                   {/* Question 3 */}
                   <div className="mt-5 rounded-[16px] bg-white px-6 py-6 sm:px-10">
-                    <h3 className="text-[18px] font-bold leading-[1.5] tracking-[-0.03em] text-[#2F3531]">
-                      3. 그리운 분의 목소리로 전화하듯 대화하는 기능에 대해
-                      어떻게 느끼시나요?
-                    </h3>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-[18px] font-bold leading-[1.5] tracking-[-0.03em] text-[#2F3531]">
+                        3. 가족 목소리나 대화를 다시 찾거나 정리할 때 불편했던
+                        적이 있나요?
+                      </h3>
+
+                      <span className="text-[12px] font-medium text-[#E76E63]">
+                        단일 선택 · 필수
+                      </span>
+                    </div>
 
                     <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
                       {[
-                        "꼭 써보고 싶어요",
-                        "궁금하지만 조금 조심스러워요",
-                        "원본 목소리만 듣고 싶어요",
-                        "불편하게 느껴져요",
+                        "원하는 녹음이나 영상을 찾기 어려웠다",
+                        "기록이 여러 곳에 흩어져 있어 정리하기 어려웠다",
+                        "다시 듣고 싶었지만 따로 찾아보지는 않았다",
+                        "애초에 찾거나 정리해야겠다는 생각을 해본 적이 없다",
+                        "특별히 불편함을 느낀 적은 없다",
+                        "잘 모르겠다",
                       ].map((item) => (
                         <SurveyChoice
                           key={item}
                           label={item}
-                          selected={voicePersonaFeeling === item}
-                          onClick={() => setVoicePersonaFeeling(item)}
+                          selected={pastDifficulty === item}
+                          onClick={() => setPastDifficulty(item)}
                         />
                       ))}
                     </div>
@@ -438,12 +472,108 @@ function ReservationPage() {
                   {/* Question 4 */}
                   <div className="mt-5 rounded-[16px] bg-white px-6 py-6 sm:px-10">
                     <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="text-[18px] font-bold tracking-[-0.03em] text-[#2F3531]">
-                        4. 가장 걱정되는 점을 골라주세요.
+                      <h3 className="text-[18px] font-bold leading-[1.5] tracking-[-0.03em] text-[#2F3531]">
+                        4. 가족의 목소리나 평소 대화가 사라진다면 얼마나 아쉬울
+                        것 같나요?
                       </h3>
 
-                      <span className="text-[12px] font-medium text-[#737A74]">
-                        복수 선택 가능
+                      <span className="text-[12px] font-medium text-[#E76E63]">
+                        5점 척도 · 필수
+                      </span>
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-5">
+                      {[
+                        "1 전혀 아쉽지 않다",
+                        "2 별로 아쉽지 않다",
+                        "3 보통이다",
+                        "4 꽤 아쉽다",
+                        "5 매우 아쉽다",
+                      ].map((item) => (
+                        <SurveyChoice
+                          key={item}
+                          label={item}
+                          selected={missingFeeling === item}
+                          onClick={() => setMissingFeeling(item)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Question 5 */}
+                  <div className="mt-5 rounded-[16px] bg-white px-6 py-6 sm:px-10">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-[18px] font-bold leading-[1.5] tracking-[-0.03em] text-[#2F3531]">
+                        5. 가장 써보고 싶은 기능은 무엇인가요?
+                      </h3>
+
+                      <span className="text-[12px] font-medium text-[#E76E63]">
+                        복수 선택 · 필수
+                      </span>
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {[
+                        "보관하기: 흩어진 통화 녹음과 음성파일을 한 곳에 모아두는 것",
+                        "정리하기: 나중에 다시 찾기 쉽게 정리해두는 것",
+                        "검색하기: 원하는 기억이나 대화 내용을 쉽게 찾는 것",
+                        "공유하기: 가족과 기록을 함께 보고 나누는 것",
+                        "Voice Persona: 기록을 바탕으로 AI 음성 대화를 만드는 것",
+                        "아직 특별히 필요한 도움은 없다",
+                      ].map((item) => (
+                        <SurveyChoice
+                          key={item}
+                          label={item}
+                          selected={wantedFeatures.includes(item)}
+                          onClick={() =>
+                            toggleMultipleChoice(item, setWantedFeatures)
+                          }
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Question 6 */}
+                  <div className="mt-5 rounded-[16px] bg-white px-6 py-6 sm:px-10">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-[18px] font-bold leading-[1.5] tracking-[-0.03em] text-[#2F3531]">
+                        6. 그리운 분의 목소리로 전화하듯 대화하는 기능인 Voice
+                        Persona에 대한 첫 느낌은 어떤가요?
+                      </h3>
+
+                      <span className="text-[12px] font-medium text-[#E76E63]">
+                        단일 선택 · 필수
+                      </span>
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {[
+                        "꼭 써보고 싶다",
+                        "관심은 있지만 조금 조심스럽다",
+                        "보관/검색 기능은 좋지만 Voice Persona는 부담스럽다",
+                        "윤리적, 감정적으로 불편하다",
+                        "무섭거나 거부감이 든다",
+                        "잘 모르겠다",
+                      ].map((item) => (
+                        <SurveyChoice
+                          key={item}
+                          label={item}
+                          selected={voicePersonaOpinion === item}
+                          onClick={() => setVoicePersonaOpinion(item)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Question 7 */}
+                  <div className="mt-5 rounded-[16px] bg-white px-6 py-6 sm:px-10">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-[18px] font-bold leading-[1.5] tracking-[-0.03em] text-[#2F3531]">
+                        7. 가장 걱정되는 점은 어떤 것인가요?
+                      </h3>
+
+                      <span className="text-[12px] font-medium text-[#E76E63]">
+                        복수 선택 · 필수
                       </span>
                     </div>
 
@@ -452,35 +582,18 @@ function ReservationPage() {
                         "목소리와 개인정보 보관",
                         "그리운 분과는 다른 말을 할까봐",
                         "슬픈 감정이 커질까봐",
-                        "이용 가격",
+                        "가격이 너무 비쌀까봐",
                       ].map((item) => (
                         <SurveyChoice
                           key={item}
                           label={item}
-                          selected={concerns.includes(item)}
+                          selected={mainConcerns.includes(item)}
                           onClick={() =>
-                            toggleMultipleChoice(item, setConcerns)
+                            toggleMultipleChoice(item, setMainConcerns)
                           }
                         />
                       ))}
                     </div>
-                  </div>
-
-                  {/* Question 5 */}
-                  <div className="mt-5 rounded-[16px] bg-white px-6 py-6 sm:px-10">
-                    <label>
-                      <span className="text-[18px] font-bold tracking-[-0.03em] text-[#2F3531]">
-                        5. 이런 상황에서 쓰고 싶다는 생각이 있다면 알려주세요.
-                      </span>
-
-                      <textarea
-                        value={useCase}
-                        onChange={(event) => setUseCase(event.target.value)}
-                        placeholder="예: 명절에 가족들과 할머니 목소리를 다시 듣고 싶어요."
-                        rows={4}
-                        className="mt-5 w-full resize-none rounded-[8px] border border-[#CBD3CC] bg-white px-5 py-4 text-[15px] leading-[1.7] text-[#3D433F] outline-none transition-colors placeholder:text-[#9AA09B] focus:border-[#20C986]"
-                      />
-                    </label>
                   </div>
                 </div>
               </section>
@@ -694,29 +807,28 @@ function ReservationPage() {
                   사전등록 완료하기
                 </button>
               </div>
-              {participationType === "interview" && (
-                <div className="mx-auto mt-8 flex max-w-[1000px] flex-col items-center justify-between gap-5 rounded-[18px] border border-[#D8EEE1] bg-[#F3FCF7] px-6 py-6 sm:flex-row sm:px-8">
-                  <div>
-                    <p className="text-[16px] font-bold tracking-[-0.03em] text-[#343A36] sm:text-[18px]">
-                      카카오톡 채널 이용 시 더 원활한 소통이 가능합니다.
-                    </p>
 
-                    <p className="mt-2 text-[13px] leading-[1.6] text-[#7A817B] sm:text-[14px]">
-                      인터뷰 일정 조율과 베타 버전 이용 안내를 카카오톡으로
-                      빠르게 받아보세요.
-                    </p>
-                  </div>
+              <div className="mx-auto mt-8 flex max-w-[1000px] flex-col items-center justify-between gap-5 rounded-[18px] border border-[#D8EEE1] bg-[#F3FCF7] px-6 py-6 sm:flex-row sm:px-8">
+                <div>
+                  <p className="text-[16px] font-bold tracking-[-0.03em] text-[#343A36] sm:text-[18px]">
+                    카카오톡 채널 이용 시 더 원활한 소통이 가능합니다.
+                  </p>
 
-                  <a
-                    href="https://pf.kakao.com/_nNwwX"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-[48px] w-full shrink-0 items-center justify-center rounded-[10px] bg-[#FEE500] px-6 text-[15px] font-bold text-[#191919] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_14px_rgba(0,0,0,0.10)] sm:w-auto"
-                  >
-                    카카오톡 채널 추가하기
-                  </a>
+                  <p className="mt-2 text-[13px] leading-[1.6] text-[#7A817B] sm:text-[14px]">
+                    인터뷰 일정 조율과 베타 버전 이용 안내를 카카오톡으로 빠르게
+                    받아보세요.
+                  </p>
                 </div>
-              )}
+
+                <a
+                  href="https://pf.kakao.com/_nNwwX"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-[48px] w-full shrink-0 items-center justify-center rounded-[10px] bg-[#FEE500] px-6 text-[15px] font-bold text-[#191919] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_14px_rgba(0,0,0,0.10)] sm:w-auto"
+                >
+                  카카오톡 채널 추가하기
+                </a>
+              </div>
             </section>
           </form>
         </div>
