@@ -44,16 +44,16 @@ function HeroSection() {
 
           <div className="mt-16 flex flex-col gap-4 sm:flex-row sm:items-center">
             <Link
-              to="/resevation"
+              to="/reservation"
               className="inline-flex h-[54px] min-w-[190px] items-center justify-center rounded-full border-2 border-[#8D82F5] bg-gradient-to-r from-[#25D0B3] to-[#7BD65A] px-7 text-[17px] font-bold text-white shadow-[0_5px_15px_rgba(34,201,134,0.18)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(34,201,134,0.28)]"
             >
               사전 등록하기
             </Link>
 
             <a
-              href="https://pf.kakao.com/"
+              href="http://pf.kakao.com/_nNwwX"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="inline-flex h-[48px] items-center justify-center rounded-lg bg-[#DDF8E7] px-5 text-[14px] font-bold text-[#168C59] transition-colors hover:bg-[#CFF3DE]"
             >
               + 카카오톡 채널 추가하기

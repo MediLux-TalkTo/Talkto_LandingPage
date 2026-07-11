@@ -3,7 +3,7 @@ import voicePersonaPhone from "../assets/images/voice-persona-phone.png";
 function VoicePersonaSection() {
   return (
     <section
-      id="experience"
+      id="how-it-works"
       className="overflow-hidden bg-[#FFFDFB] px-6 py-24 sm:py-28 lg:py-32"
     >
       <div className="mx-auto max-w-[1440px]">
