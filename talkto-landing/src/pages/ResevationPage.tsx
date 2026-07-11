@@ -39,14 +39,14 @@ const participationOptions: ParticipationOption[] = [
     id: "survey",
     title: "첫 이용 10% 할인",
     description: "짧은 설문에 답하고 체험 서비스에 더 빠르게 초대받아요.",
-    tags: ["사전 등록만", "1분 설문"],
+    tags: ["사전 등록", "1분 설문"],
   },
   {
     id: "interview",
     title: "첫 이용 20% 할인",
     description:
-      "TalkTo 팀과 이야기하고 20% 할인으로 서비스를 더 원활히 이용해봐요.",
-    tags: ["사전 등록만", "30분 인터뷰 신청"],
+      "TalkTo 팀과 이야기하고 20% 할인된 가격으로 베타 버전을 지금 바로 사용해봐요.",
+    tags: ["사전 등록", "30분 인터뷰 신청", "베타 버전 이용"],
   },
 ];
 
@@ -694,6 +694,29 @@ function ReservationPage() {
                   사전등록 완료하기
                 </button>
               </div>
+              {participationType === "interview" && (
+                <div className="mx-auto mt-8 flex max-w-[1000px] flex-col items-center justify-between gap-5 rounded-[18px] border border-[#D8EEE1] bg-[#F3FCF7] px-6 py-6 sm:flex-row sm:px-8">
+                  <div>
+                    <p className="text-[16px] font-bold tracking-[-0.03em] text-[#343A36] sm:text-[18px]">
+                      카카오톡 채널 이용 시 더 원활한 소통이 가능합니다.
+                    </p>
+
+                    <p className="mt-2 text-[13px] leading-[1.6] text-[#7A817B] sm:text-[14px]">
+                      인터뷰 일정 조율과 베타 버전 이용 안내를 카카오톡으로
+                      빠르게 받아보세요.
+                    </p>
+                  </div>
+
+                  <a
+                    href="https://pf.kakao.com/_nNwwX"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-[48px] w-full shrink-0 items-center justify-center rounded-[10px] bg-[#FEE500] px-6 text-[15px] font-bold text-[#191919] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_14px_rgba(0,0,0,0.10)] sm:w-auto"
+                  >
+                    카카오톡 채널 추가하기
+                  </a>
+                </div>
+              )}
             </section>
           </form>
         </div>
