@@ -30,21 +30,21 @@ type RecordingAmount = "none" | "under-10" | "10-to-30" | "over-30";
 
 type ApiParticipationType = "early_access" | "survey_10" | "interview_20";
 
-type SurveyRequest = {
-  firstSituation: string;
-  voiceRecordingAmount: string;
-  pastDifficulty: string;
-  missingFeeling: string;
-  wantedFeatures: string[];
-  voicePersonaOpinion: string;
-  mainConcerns: string[];
-};
+// type SurveyRequest = {
+//   firstSituation: string;
+//   voiceRecordingAmount: string;
+//   pastDifficulty: string;
+//   missingFeeling: string;
+//   wantedFeatures: string[];
+//   voicePersonaOpinion: string;
+//   mainConcerns: string[];
+// };
 
-type InterviewRequest = {
-  interviewTimes: InterviewTime[];
-  preferredContactMethod: ContactMethod;
-  recordingAmount: RecordingAmount;
-};
+// type InterviewRequest = {
+//   interviewTimes: InterviewTime[];
+//   preferredContactMethod: ContactMethod;
+//   recordingAmount: RecordingAmount;
+// };
 
 type PreRegistrationSurvey = {
   hasRecording: string;
