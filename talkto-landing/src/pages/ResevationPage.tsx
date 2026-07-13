@@ -46,6 +46,20 @@ type InterviewRequest = {
   recordingAmount: RecordingAmount;
 };
 
+type PreRegistrationSurvey = {
+  hasRecording: string;
+  interests: string[];
+  voicePersonaFeeling: string;
+  concerns: string[];
+  usageSituation: string;
+};
+
+type PreRegistrationInterview = {
+  preferredTimeSlots: string[];
+  preferredContactMethod: ContactMethod;
+  recordingDuration: string;
+};
+
 type PreRegistrationRequest = {
   participationType: ApiParticipationType;
   name: string;
@@ -53,9 +67,14 @@ type PreRegistrationRequest = {
   reason: string;
   reasonOther?: string;
   contactConsent: true;
-  contactConsentVersion: "landing_reservation_v1";
-  survey?: SurveyRequest;
-  interview?: InterviewRequest;
+  contactConsentVersion: "landing_beta_contact_v1";
+  survey?: PreRegistrationSurvey;
+  interview?: PreRegistrationInterview;
+  utm?: {
+    source?: string;
+    medium?: string;
+    campaign?: string;
+  };
 };
 
 type PreRegistrationResponse = {
@@ -63,6 +82,8 @@ type PreRegistrationResponse = {
   status?: string;
   benefitStatus?: string;
   message?: string | string[];
+  error?: string;
+  statusCode?: number;
 };
 
 const participationTypeMap: Record<ParticipationType, ApiParticipationType> = {
@@ -308,7 +329,81 @@ function ReservationPage() {
       reason,
 
       contactConsent: true,
-      contactConsentVersion: "landing_reservation_v1",
+      contactConsentVersion: "landing_beta_contact_v1",
+    };
+
+    const hasRecordingMap: Record<string, string> = {
+      "10개 이상 있다": "has_recording",
+      "3~9개 있다": "has_recording",
+      "1~2개 있다": "has_recording",
+
+      // 아래 enum은 Swagger에서 정확한 값을 확인해야 합니다.
+      "있을 것 같지만 아직 찾아보지 않았다": "여기에_백엔드_enum",
+      "사진/영상/문자는 있지만 음성은 없다": "여기에_백엔드_enum",
+      "전혀 없다": "여기에_백엔드_enum",
+    };
+
+    const interestMap: Record<string, string> = {
+      "보관하기: 흩어진 통화 녹음과 음성파일을 한 곳에 모아두는 것":
+        "archive_recordings",
+
+      // 아래 값은 Swagger enum 확인 필요
+      "정리하기: 나중에 다시 찾기 쉽게 정리해두는 것": "여기에_백엔드_enum",
+
+      "검색하기: 원하는 기억이나 대화 내용을 쉽게 찾는 것":
+        "여기에_백엔드_enum",
+
+      "공유하기: 가족과 기록을 함께 보고 나누는 것": "여기에_백엔드_enum",
+
+      "Voice Persona: 기록을 바탕으로 AI 음성 대화를 만드는 것":
+        "여기에_백엔드_enum",
+
+      "아직 특별히 필요한 도움은 없다": "여기에_백엔드_enum",
+    };
+
+    const voicePersonaFeelingMap: Record<string, string> = {
+      "꼭 써보고 싶다": "eager",
+
+      // 아래 값은 Swagger enum 확인 필요
+      "관심은 있지만 조금 조심스럽다": "여기에_백엔드_enum",
+
+      "보관/검색 기능은 좋지만 Voice Persona는 부담스럽다":
+        "여기에_백엔드_enum",
+
+      "윤리적, 감정적으로 불편하다": "여기에_백엔드_enum",
+
+      "무섭거나 거부감이 든다": "여기에_백엔드_enum",
+
+      "잘 모르겠다": "여기에_백엔드_enum",
+    };
+
+    const concernMap: Record<string, string> = {
+      "목소리와 개인정보 보관": "privacy_storage",
+
+      // 아래 값은 Swagger enum 확인 필요
+      "그리운 분과는 다른 말을 할까봐": "여기에_백엔드_enum",
+
+      "슬픈 감정이 커질까봐": "여기에_백엔드_enum",
+
+      "가격이 너무 비쌀까봐": "여기에_백엔드_enum",
+    };
+
+    const interviewTimeMap: Record<InterviewTime, string> = {
+      "weekday-day": "weekday_daytime",
+
+      // 아래 값은 Swagger enum 확인 필요
+      "weekday-evening": "여기에_백엔드_enum",
+      "weekend-day": "여기에_백엔드_enum",
+      "weekend-evening": "여기에_백엔드_enum",
+    };
+
+    const recordingDurationMap: Record<RecordingAmount, string> = {
+      none: "none",
+
+      // Swagger enum 확인 필요
+      "under-10": "여기에_백엔드_enum",
+      "10-to-30": "여기에_백엔드_enum",
+      "over-30": "여기에_백엔드_enum",
     };
 
     if (reason === "other") {
@@ -317,21 +412,32 @@ function ReservationPage() {
 
     if (participationType === "survey") {
       requestBody.survey = {
-        firstSituation,
-        voiceRecordingAmount,
-        pastDifficulty,
-        missingFeeling,
-        wantedFeatures,
-        voicePersonaOpinion,
-        mainConcerns,
+        hasRecording: hasRecordingMap[voiceRecordingAmount],
+
+        interests: wantedFeatures.map((item) => interestMap[item]),
+
+        voicePersonaFeeling: voicePersonaFeelingMap[voicePersonaOpinion],
+
+        concerns: mainConcerns.map((item) => concernMap[item]),
+
+        usageSituation: JSON.stringify({
+          firstSituation,
+          pastDifficulty,
+          missingFeeling,
+        }),
       };
     }
 
     if (participationType === "interview") {
       requestBody.interview = {
-        interviewTimes,
+        preferredTimeSlots: interviewTimes.map(
+          (item) => interviewTimeMap[item]
+        ),
+
         preferredContactMethod: preferredContactMethod as ContactMethod,
-        recordingAmount: recordingAmount as RecordingAmount,
+
+        recordingDuration:
+          recordingDurationMap[recordingAmount as RecordingAmount],
       };
     }
 
@@ -342,6 +448,8 @@ function ReservationPage() {
         throw new Error("API 주소가 설정되지 않았습니다.");
       }
 
+      console.log("사전등록 요청 body:", JSON.stringify(requestBody, null, 2));
+
       const response = await fetch(`${apiBaseUrl}/pre-registrations`, {
         method: "POST",
         headers: {
@@ -350,26 +458,36 @@ function ReservationPage() {
         body: JSON.stringify(requestBody),
       });
 
-      const data = (await response
-        .json()
-        .catch(() => null)) as PreRegistrationResponse | null;
+      const responseText = await response.text();
+
+      let data: PreRegistrationResponse | null = null;
+
+      try {
+        data = responseText
+          ? (JSON.parse(responseText) as PreRegistrationResponse)
+          : null;
+      } catch {
+        console.error("JSON이 아닌 API 응답:", responseText);
+      }
+
+      console.log("응답 상태:", response.status);
+      console.log("응답 원문:", responseText);
 
       if (!response.ok) {
         let message = "사전 등록 요청을 처리하지 못했습니다.";
 
-        if (data) {
-          if (typeof data.message === "string") {
-            message = data.message;
-          } else if (Array.isArray(data.message)) {
-            message = data.message.join(", ");
-          }
+        if (data?.message) {
+          message = Array.isArray(data.message)
+            ? data.message.join(", ")
+            : data.message;
+        } else if (data?.error) {
+          message = data.error;
+        } else if (responseText) {
+          message = responseText;
         }
 
         throw new Error(message);
       }
-
-      console.log("사전등록 요청:", requestBody);
-      console.log("사전등록 응답:", data);
 
       setIsSubmitted(true);
     } catch (error) {
@@ -911,7 +1029,7 @@ function ReservationPage() {
                     >
                       <option value="">선택해주세요</option>
 
-                      <option value="parent-memory">
+                      <option value="preserve_voice_and_memories">
                         부모님의 목소리와 기억을 남기고 싶어요
                       </option>
 
