@@ -77,6 +77,12 @@ type SurveyConcern =
   | "emotional_distress"
   | "price";
 
+type PreRegistrationReason =
+  | "preserve_voice_and_memories"
+  | "preserve_family_records"
+  | "voice_persona_interest"
+  | "other";
+
 type PreRegistrationSurvey = {
   firstSituation: SurveyFirstSituation;
   recordingAvailability: SurveyRecordingAvailability;
@@ -87,17 +93,29 @@ type PreRegistrationSurvey = {
   concerns: SurveyConcern[];
 };
 
+type ApiInterviewTimeSlot =
+  | "weekday_daytime"
+  | "weekday_evening"
+  | "weekend_daytime"
+  | "weekend_evening";
+
+type ApiRecordingDuration =
+  | "none"
+  | "under_10_min"
+  | "between_10_and_30_min"
+  | "over_30_min";
+
 type PreRegistrationInterview = {
-  preferredTimeSlots: string[];
+  preferredTimeSlots: ApiInterviewTimeSlot[];
   preferredContactMethod: ContactMethod;
-  recordingDuration: string;
+  recordingDuration: ApiRecordingDuration;
 };
 
 type PreRegistrationRequest = {
   participationType: ApiParticipationType;
   name: string;
   contact: string;
-  reason: string;
+  reason: PreRegistrationReason;
   reasonOther?: string;
   contactConsent: true;
   contactConsentVersion: "landing_beta_contact_v1";
@@ -279,7 +297,7 @@ function ReservationPage() {
     useState<ParticipationType>("preview");
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
-  const [reason, setReason] = useState("");
+  const [reason, setReason] = useState<PreRegistrationReason | "">("");
   const [reasonOther, setReasonOther] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [firstSituation, setFirstSituation] = useState("");
@@ -421,32 +439,27 @@ function ReservationPage() {
 
     const requestBody: PreRegistrationRequest = {
       participationType: participationTypeMap[participationType],
-
       name: name.trim(),
       contact: contact.trim(),
-      reason,
-
+      reason: reason as PreRegistrationReason,
       contactConsent: true,
       contactConsentVersion: "landing_beta_contact_v1",
     };
 
-    const interviewTimeMap: Record<InterviewTime, string> = {
+    const interviewTimeMap: Record<InterviewTime, ApiInterviewTimeSlot> = {
       "weekday-day": "weekday_daytime",
-
-      // 아래 값은 Swagger enum 확인 필요
-      "weekday-evening": "여기에_백엔드_enum",
-      "weekend-day": "여기에_백엔드_enum",
-      "weekend-evening": "여기에_백엔드_enum",
+      "weekday-evening": "weekday_evening",
+      "weekend-day": "weekend_daytime",
+      "weekend-evening": "weekend_evening",
     };
 
-    const recordingDurationMap: Record<RecordingAmount, string> = {
-      none: "none",
-
-      // Swagger enum 확인 필요
-      "under-10": "여기에_백엔드_enum",
-      "10-to-30": "여기에_백엔드_enum",
-      "over-30": "여기에_백엔드_enum",
-    };
+    const recordingDurationMap: Record<RecordingAmount, ApiRecordingDuration> =
+      {
+        none: "none",
+        "under-10": "under_10_min",
+        "10-to-30": "between_10_and_30_min",
+        "over-30": "over_30_min",
+      };
 
     if (reason === "other") {
       requestBody.reasonOther = reasonOther.trim();
@@ -455,29 +468,19 @@ function ReservationPage() {
     if (participationType === "survey") {
       requestBody.survey = {
         firstSituation: firstSituationMap[firstSituation],
-
         recordingAvailability: recordingAvailabilityMap[voiceRecordingAmount],
-
         recordSearchExperience: recordSearchExperienceMap[pastDifficulty],
-
         voiceLossRegret: voiceLossRegretMap[missingFeeling],
-
         desiredFeatures: wantedFeatures.map((item) => desiredFeatureMap[item]),
-
         voicePersonaFeeling: voicePersonaFeelingMap[voicePersonaOpinion],
-
         concerns: mainConcerns.map((item) => concernMap[item]),
       };
-    }
-
-    if (participationType === "interview") {
+    } else if (participationType === "interview") {
       requestBody.interview = {
         preferredTimeSlots: interviewTimes.map(
           (item) => interviewTimeMap[item]
         ),
-
         preferredContactMethod: preferredContactMethod as ContactMethod,
-
         recordingDuration:
           recordingDurationMap[recordingAmount as RecordingAmount],
       };
@@ -1059,7 +1062,9 @@ function ReservationPage() {
                       id="reservation-reason"
                       value={reason}
                       onChange={(event) => {
-                        const nextReason = event.target.value;
+                        const nextReason = event.target.value as
+                          | PreRegistrationReason
+                          | "";
 
                         setReason(nextReason);
 
@@ -1075,11 +1080,11 @@ function ReservationPage() {
                         부모님의 목소리와 기억을 남기고 싶어요
                       </option>
 
-                      <option value="deceased-family">
+                      <option value="preserve_family_records">
                         돌아가신 가족의 기록을 보존하고 싶어요
                       </option>
 
-                      <option value="service-interest">
+                      <option value="voice_persona_interest">
                         Voice Persona 서비스가 궁금해요
                       </option>
 
