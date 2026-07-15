@@ -30,28 +30,61 @@ type RecordingAmount = "none" | "under-10" | "10-to-30" | "over-30";
 
 type ApiParticipationType = "early_access" | "survey_10" | "interview_20";
 
-// type SurveyRequest = {
-//   firstSituation: string;
-//   voiceRecordingAmount: string;
-//   pastDifficulty: string;
-//   missingFeeling: string;
-//   wantedFeatures: string[];
-//   voicePersonaOpinion: string;
-//   mainConcerns: string[];
-// };
+type SurveyFirstSituation =
+  | "preserve_living_family_voice"
+  | "revisit_deceased_family_voice"
+  | "lack_deceased_family_records"
+  | "leave_my_voice_and_story"
+  | "curious_about_service";
 
-// type InterviewRequest = {
-//   interviewTimes: InterviewTime[];
-//   preferredContactMethod: ContactMethod;
-//   recordingAmount: RecordingAmount;
-// };
+type SurveyRecordingAvailability =
+  | "more_than_10"
+  | "between_3_and_9"
+  | "between_1_and_2"
+  | "likely_but_not_found"
+  | "no_audio_but_other_records"
+  | "none";
+
+type SurveyRecordSearchExperience =
+  | "hard_to_find"
+  | "hard_to_organize"
+  | "wanted_to_relisten_but_did_not_search"
+  | "never_thought_to_organize"
+  | "no_inconvenience"
+  | "unsure";
+
+type SurveyVoiceLossRegret = 1 | 2 | 3 | 4 | 5;
+
+type SurveyDesiredFeature =
+  | "archive_recordings"
+  | "organize_records"
+  | "search_memories"
+  | "share_with_family"
+  | "voice_persona"
+  | "no_special_need";
+
+type SurveyVoicePersonaFeeling =
+  | "eager"
+  | "curious_cautious"
+  | "archive_search_only"
+  | "ethically_uncomfortable"
+  | "scary_or_aversive"
+  | "unsure";
+
+type SurveyConcern =
+  | "privacy_storage"
+  | "different_words"
+  | "emotional_distress"
+  | "price";
 
 type PreRegistrationSurvey = {
-  hasRecording: string;
-  interests: string[];
-  voicePersonaFeeling: string;
-  concerns: string[];
-  usageSituation: string;
+  firstSituation: SurveyFirstSituation;
+  recordingAvailability: SurveyRecordingAvailability;
+  recordSearchExperience: SurveyRecordSearchExperience;
+  voiceLossRegret: SurveyVoiceLossRegret;
+  desiredFeatures: SurveyDesiredFeature[];
+  voicePersonaFeeling: SurveyVoicePersonaFeeling;
+  concerns: SurveyConcern[];
 };
 
 type PreRegistrationInterview = {
@@ -90,6 +123,71 @@ const participationTypeMap: Record<ParticipationType, ApiParticipationType> = {
   preview: "early_access",
   survey: "survey_10",
   interview: "interview_20",
+};
+
+const firstSituationMap: Record<string, SurveyFirstSituation> = {
+  "살아계신 부모님/조부모님의 목소리와 이야기를 남기고 싶다":
+    "preserve_living_family_voice",
+  "돌아가신 가족의 목소리나 대화를 다시 찾고 싶다":
+    "revisit_deceased_family_voice",
+  "돌아가신 가족의 기록이 거의 없어 아쉽다": "lack_deceased_family_records",
+  "내 목소리와 이야기를 가족에게 남기고 싶다": "leave_my_voice_and_story",
+  "서비스가 궁금하다": "curious_about_service",
+};
+
+const recordingAvailabilityMap: Record<string, SurveyRecordingAvailability> = {
+  "10개 이상 있다": "more_than_10",
+  "3~9개 있다": "between_3_and_9",
+  "1~2개 있다": "between_1_and_2",
+  "있을 것 같지만 아직 찾아보지 않았다": "likely_but_not_found",
+  "사진/영상/문자는 있지만 음성은 없다": "no_audio_but_other_records",
+  "전혀 없다": "none",
+};
+
+const recordSearchExperienceMap: Record<string, SurveyRecordSearchExperience> =
+  {
+    "원하는 녹음이나 영상을 찾기 어려웠다": "hard_to_find",
+    "기록이 여러 곳에 흩어져 있어 정리하기 어려웠다": "hard_to_organize",
+    "다시 듣고 싶었지만 따로 찾아보지는 않았다":
+      "wanted_to_relisten_but_did_not_search",
+    "애초에 찾거나 정리해야겠다는 생각을 해본 적이 없다":
+      "never_thought_to_organize",
+    "특별히 불편함을 느낀 적은 없다": "no_inconvenience",
+    "잘 모르겠다": "unsure",
+  };
+
+const voiceLossRegretMap: Record<string, SurveyVoiceLossRegret> = {
+  "1 전혀 아쉽지 않다": 1,
+  "2 별로 아쉽지 않다": 2,
+  "3 보통이다": 3,
+  "4 꽤 아쉽다": 4,
+  "5 매우 아쉽다": 5,
+};
+
+const desiredFeatureMap: Record<string, SurveyDesiredFeature> = {
+  "보관하기: 흩어진 통화 녹음과 음성파일을 한 곳에 모아두는 것":
+    "archive_recordings",
+  "정리하기: 나중에 다시 찾기 쉽게 정리해두는 것": "organize_records",
+  "검색하기: 원하는 기억이나 대화 내용을 쉽게 찾는 것": "search_memories",
+  "공유하기: 가족과 기록을 함께 보고 나누는 것": "share_with_family",
+  "Voice Persona: 기록을 바탕으로 AI 음성 대화를 만드는 것": "voice_persona",
+  "아직 특별히 필요한 도움은 없다": "no_special_need",
+};
+
+const voicePersonaFeelingMap: Record<string, SurveyVoicePersonaFeeling> = {
+  "꼭 써보고 싶다": "eager",
+  "관심은 있지만 조금 조심스럽다": "curious_cautious",
+  "보관/검색 기능은 좋지만 Voice Persona는 부담스럽다": "archive_search_only",
+  "윤리적, 감정적으로 불편하다": "ethically_uncomfortable",
+  "무섭거나 거부감이 든다": "scary_or_aversive",
+  "잘 모르겠다": "unsure",
+};
+
+const concernMap: Record<string, SurveyConcern> = {
+  "목소리와 개인정보 보관": "privacy_storage",
+  "그리운 분과는 다른 말을 할까봐": "different_words",
+  "슬픈 감정이 커질까봐": "emotional_distress",
+  "가격이 너무 비쌀까봐": "price",
 };
 
 const participationOptions: ParticipationOption[] = [
@@ -332,62 +430,6 @@ function ReservationPage() {
       contactConsentVersion: "landing_beta_contact_v1",
     };
 
-    const hasRecordingMap: Record<string, string> = {
-      "10개 이상 있다": "has_recording",
-      "3~9개 있다": "has_recording",
-      "1~2개 있다": "has_recording",
-
-      // 아래 enum은 Swagger에서 정확한 값을 확인해야 합니다.
-      "있을 것 같지만 아직 찾아보지 않았다": "여기에_백엔드_enum",
-      "사진/영상/문자는 있지만 음성은 없다": "여기에_백엔드_enum",
-      "전혀 없다": "여기에_백엔드_enum",
-    };
-
-    const interestMap: Record<string, string> = {
-      "보관하기: 흩어진 통화 녹음과 음성파일을 한 곳에 모아두는 것":
-        "archive_recordings",
-
-      // 아래 값은 Swagger enum 확인 필요
-      "정리하기: 나중에 다시 찾기 쉽게 정리해두는 것": "여기에_백엔드_enum",
-
-      "검색하기: 원하는 기억이나 대화 내용을 쉽게 찾는 것":
-        "여기에_백엔드_enum",
-
-      "공유하기: 가족과 기록을 함께 보고 나누는 것": "여기에_백엔드_enum",
-
-      "Voice Persona: 기록을 바탕으로 AI 음성 대화를 만드는 것":
-        "여기에_백엔드_enum",
-
-      "아직 특별히 필요한 도움은 없다": "여기에_백엔드_enum",
-    };
-
-    const voicePersonaFeelingMap: Record<string, string> = {
-      "꼭 써보고 싶다": "eager",
-
-      // 아래 값은 Swagger enum 확인 필요
-      "관심은 있지만 조금 조심스럽다": "여기에_백엔드_enum",
-
-      "보관/검색 기능은 좋지만 Voice Persona는 부담스럽다":
-        "여기에_백엔드_enum",
-
-      "윤리적, 감정적으로 불편하다": "여기에_백엔드_enum",
-
-      "무섭거나 거부감이 든다": "여기에_백엔드_enum",
-
-      "잘 모르겠다": "여기에_백엔드_enum",
-    };
-
-    const concernMap: Record<string, string> = {
-      "목소리와 개인정보 보관": "privacy_storage",
-
-      // 아래 값은 Swagger enum 확인 필요
-      "그리운 분과는 다른 말을 할까봐": "여기에_백엔드_enum",
-
-      "슬픈 감정이 커질까봐": "여기에_백엔드_enum",
-
-      "가격이 너무 비쌀까봐": "여기에_백엔드_enum",
-    };
-
     const interviewTimeMap: Record<InterviewTime, string> = {
       "weekday-day": "weekday_daytime",
 
@@ -412,19 +454,19 @@ function ReservationPage() {
 
     if (participationType === "survey") {
       requestBody.survey = {
-        hasRecording: hasRecordingMap[voiceRecordingAmount],
+        firstSituation: firstSituationMap[firstSituation],
 
-        interests: wantedFeatures.map((item) => interestMap[item]),
+        recordingAvailability: recordingAvailabilityMap[voiceRecordingAmount],
+
+        recordSearchExperience: recordSearchExperienceMap[pastDifficulty],
+
+        voiceLossRegret: voiceLossRegretMap[missingFeeling],
+
+        desiredFeatures: wantedFeatures.map((item) => desiredFeatureMap[item]),
 
         voicePersonaFeeling: voicePersonaFeelingMap[voicePersonaOpinion],
 
         concerns: mainConcerns.map((item) => concernMap[item]),
-
-        usageSituation: JSON.stringify({
-          firstSituation,
-          pastDifficulty,
-          missingFeeling,
-        }),
       };
     }
 
