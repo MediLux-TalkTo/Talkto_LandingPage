@@ -129,12 +129,22 @@ type PreRegistrationRequest = {
 };
 
 type PreRegistrationResponse = {
+  success?: boolean;
   id?: string;
   status?: string;
   benefitStatus?: string;
   message?: string | string[];
-  error?: string;
-  statusCode?: number;
+  error?: {
+    code?: string;
+    message?: string;
+    details?: {
+      code?: string;
+      message?: string;
+    };
+  };
+  meta?: {
+    timestamp?: string;
+  };
 };
 
 const participationTypeMap: Record<ParticipationType, ApiParticipationType> = {
@@ -206,6 +216,20 @@ const concernMap: Record<string, SurveyConcern> = {
   "그리운 분과는 다른 말을 할까봐": "different_words",
   "슬픈 감정이 커질까봐": "emotional_distress",
   "가격이 너무 비쌀까봐": "price",
+};
+
+const interviewTimeMap: Record<InterviewTime, ApiInterviewTimeSlot> = {
+  "weekday-day": "weekday_daytime",
+  "weekday-evening": "weekday_evening",
+  "weekend-day": "weekend_daytime",
+  "weekend-evening": "weekend_evening",
+};
+
+const recordingDurationMap: Record<RecordingAmount, ApiRecordingDuration> = {
+  none: "none",
+  "under-10": "under_10_min",
+  "10-to-30": "between_10_and_30_min",
+  "over-30": "over_30_min",
 };
 
 const participationOptions: ParticipationOption[] = [
@@ -430,7 +454,7 @@ function ReservationPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!isFormValid || isSubmitting) {
+    if (!isFormValid || isSubmitting || reason === "") {
       return;
     }
 
@@ -441,25 +465,10 @@ function ReservationPage() {
       participationType: participationTypeMap[participationType],
       name: name.trim(),
       contact: contact.trim(),
-      reason: reason as PreRegistrationReason,
+      reason,
       contactConsent: true,
       contactConsentVersion: "landing_beta_contact_v1",
     };
-
-    const interviewTimeMap: Record<InterviewTime, ApiInterviewTimeSlot> = {
-      "weekday-day": "weekday_daytime",
-      "weekday-evening": "weekday_evening",
-      "weekend-day": "weekend_daytime",
-      "weekend-evening": "weekend_evening",
-    };
-
-    const recordingDurationMap: Record<RecordingAmount, ApiRecordingDuration> =
-      {
-        none: "none",
-        "under-10": "under_10_min",
-        "10-to-30": "between_10_and_30_min",
-        "over-30": "over_30_min",
-      };
 
     if (reason === "other") {
       requestBody.reasonOther = reasonOther.trim();
@@ -493,7 +502,13 @@ function ReservationPage() {
         throw new Error("API 주소가 설정되지 않았습니다.");
       }
 
-      console.log("사전등록 요청 body:", JSON.stringify(requestBody, null, 2));
+      // 개발 환경에서만 확인
+      if (import.meta.env.DEV) {
+        console.log(
+          "사전등록 요청 body:",
+          JSON.stringify(requestBody, null, 2)
+        );
+      }
 
       const response = await fetch(`${apiBaseUrl}/pre-registrations`, {
         method: "POST",
@@ -507,26 +522,48 @@ function ReservationPage() {
 
       let data: PreRegistrationResponse | null = null;
 
-      try {
-        data = responseText
-          ? (JSON.parse(responseText) as PreRegistrationResponse)
-          : null;
-      } catch {
-        console.error("JSON이 아닌 API 응답:", responseText);
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText) as PreRegistrationResponse;
+        } catch {
+          if (import.meta.env.DEV) {
+            console.error("JSON이 아닌 API 응답:", responseText);
+          }
+        }
       }
 
-      console.log("응답 상태:", response.status);
-      console.log("응답 원문:", responseText);
+      if (import.meta.env.DEV) {
+        console.log("응답 상태:", response.status);
+        console.log("응답 원문:", responseText);
+      }
 
       if (!response.ok) {
+        const errorCode = data?.error?.code ?? data?.error?.details?.code;
+
+        if (
+          response.status === 409 &&
+          errorCode === "pre_registration_already_exists"
+        ) {
+          window.alert(
+            "이미 사전등록이 완료된 연락처입니다.\n\n베타 서비스 및 혜택 안내를 기다려주세요."
+          );
+          return;
+        }
+
         let message = "사전 등록 요청을 처리하지 못했습니다.";
 
-        if (data?.message) {
-          message = Array.isArray(data.message)
-            ? data.message.join(", ")
-            : data.message;
-        } else if (data?.error) {
-          message = data.error;
+        const responseMessage = data?.message;
+        const errorMessage = data?.error?.message;
+        const detailMessage = data?.error?.details?.message;
+
+        if (typeof responseMessage === "string") {
+          message = responseMessage;
+        } else if (Array.isArray(responseMessage)) {
+          message = responseMessage.join(", ");
+        } else if (typeof errorMessage === "string") {
+          message = errorMessage;
+        } else if (typeof detailMessage === "string") {
+          message = detailMessage;
         } else if (responseText) {
           message = responseText;
         }
@@ -536,7 +573,9 @@ function ReservationPage() {
 
       setIsSubmitted(true);
     } catch (error) {
-      console.error("사전등록 오류:", error);
+      if (import.meta.env.DEV) {
+        console.error("사전등록 오류:", error);
+      }
 
       setSubmitError(
         error instanceof Error
